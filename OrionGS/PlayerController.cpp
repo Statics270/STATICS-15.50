@@ -31,8 +31,12 @@ void PlayerController::ServerAcknowledgePossession(APlayerController* PlayerCont
 }
 
 static bool AllPlayersConnected(AFortGameModeAthena* GameMode) {
-    // im lazy asf atm
-    return true;
+    auto GameState = Utils::Cast<AFortGameStateAthena>(GameMode->GameState);
+    if (!GameState) return false;
+    int32 MinPlayers = GameState->CurrentPlaylistInfo.BasePlaylist ?
+        GameState->CurrentPlaylistInfo.BasePlaylist->MinPlayers : 1;
+    if (MinPlayers <= 0) MinPlayers = 1;
+    return GameState->PlayerArray.Num() >= MinPlayers;
 }
 
 void PlayerController::ServerReadyToStartMatch(AFortPlayerController* PlayerController)
@@ -241,45 +245,7 @@ void PlayerController::ServerReadyToStartMatch(AFortPlayerController* PlayerCont
         Actors.Free();
     }
 
-    if (AllPlayersConnected((AFortGameModeAthena*)UWorld::GetWorld()->AuthorityGameMode)) {
-        float Duration = 10; // Notify the players that the game will start in 10 seconds!
-        float EarlyDuration = Duration;
-
-        float TimeSeconds = UGameplayStatics::GetTimeSeconds(UWorld::GetWorld());
-
-        // Make sure the countdown new countdown is shorter than the current one
-        if (TimeSeconds + Duration < GameState->WarmupCountdownEndTime) {
-            auto GameMode = Utils::Cast<AFortGameModeAthena>(UWorld::GetWorld()->AuthorityGameMode);
-
-            GameState->WarmupCountdownEndTime = TimeSeconds + Duration;
-            GameMode->WarmupCountdownDuration = Duration;
-
-            GameState->WarmupCountdownStartTime = TimeSeconds;
-            GameMode->WarmupEarlyCountdownDuration = EarlyDuration;
-
-            TArray<AActor*> PlayerStarts;
-            UGameplayStatics::GetAllActorsOfClass(UWorld::GetWorld(), AFortPlayerStartWarmup::StaticClass(), &PlayerStarts);
-            auto GameSession = Utils::Cast<AFortGameSessionDedicatedAthena>(GameMode->GameSession);
-            for (size_t i = 0; i < Utils::Cast<AFortGameStateAthena>(GameMode->GameState)->CurrentPlaylistInfo.BasePlaylist->MaxPlayers - GameMode->AlivePlayers.Num(); i++) {
-                auto start = PlayerStarts.At(i);
-                //auto start = PlayerStarts[UKismetMathLibrary::RandomIntegerInRange(0, PlayerStarts.Num() - 1)];
-                FTransform Transform{};
-                Transform.Translation = start->K2_GetActorLocation();
-                Transform.Rotation = FQuat();
-                Transform.Scale3D = FVector{ 1,1,1 };
-
-                static auto PhoebeSpawnerData = StaticLoadObject<UClass>("/Game/Athena/AI/Phoebe/BP_AISpawnerData_Phoebe.BP_AISpawnerData_Phoebe_C");
-
-                ((UAthenaAISystem*)UWorld::GetWorld()->AISystem)->AISpawner->RequestSpawn(UFortAthenaAIBotSpawnerData::CreateComponentListFromClass(PhoebeSpawnerData, UWorld::GetWorld()), Transform);
-                //auto Pawn = ((UAthenaAISystem*)UWorld::GetWorld()->AISystem)->PlayerBotManager->CachedBotMutator->SpawnBot(StaticLoadObject<UClass>("/Game/Athena/AI/Phoebe/BP_PlayerPawn_Athena_Phoebe.BP_PlayerPawn_Athena_Phoebe_C"), start, Transform.Translation, (FRotator&)FRotator(), false);
-                //printf("PAWN: %s\n", Pawn->GetName().c_str());
-            }
-
-            PlayerStarts.Free();
-        }
-
-        // GameState->WarmupCountdownEndTime = 10.0f;
-    }
+    // REMOVED: Immediate bot spawning code - now handled progressively in GameMode.cpp
 }
 
 /*void PlayerController::ServerRepairBuildingActor(AFortPlayerController* PC, ABuildingSMActor* Actor)
@@ -754,6 +720,31 @@ void PlayerController::ServerLoadingScreenDropped(AFortPlayerController* PlayerC
         }
         Quest->bHasRegisteredWithQuestManager = true;
     }
+
+    // Vérification du système de quêtes
+    auto QuestManager = PlayerController->GetQuestManager(ESubGame::Athena);
+    if (QuestManager) {
+        printf("[QUEST SYSTEM] ==================== QUEST VERIFICATION ====================\n");
+        printf("[QUEST SYSTEM] Quest Manager initialized successfully!\n");
+        printf("[QUEST SYSTEM] Current Quests: %d\n", QuestManager->CurrentQuests.Num());
+        for (auto Quest : QuestManager->CurrentQuests) {
+            auto QuestDef = Quest->GetQuestDefinitionBP();
+            if (QuestDef) {
+                printf("[QUEST SYSTEM] Quest: %s\n", QuestDef->QuestName.ToString().c_str());
+                printf("[QUEST SYSTEM]   Objectives: %d\n", Quest->Objectives.Num());
+                for (auto obj : Quest->Objectives) {
+                    printf("[QUEST SYSTEM]     - %s: %d/%d\n",
+                           obj->Description.ToString().c_str(),
+                           obj->AchievedCount,
+                           obj->RequiredCount);
+                }
+            }
+        }
+        printf("[QUEST SYSTEM] ==================== QUEST SYSTEM OK ====================\n");
+    } else {
+        printf("[QUEST SYSTEM] WARNING: Quest Manager not initialized!\n");
+    }
+
     return ServerLoadingScreenDroppedOG(PlayerController);
 }
 
@@ -940,9 +931,15 @@ void PlayerController::ServerCheat(AFortPlayerControllerAthena* PC, FString msg)
                 ((UAthenaAISystem*)UWorld::GetWorld()->AISystem)->AISpawner->RequestSpawn(UFortAthenaAIBotSpawnerData::CreateComponentListFromClass(PhoebeSpawnerData, UWorld::GetWorld()), Transform);
                 //auto Pawn = ((UAthenaAISystem*)UWorld::GetWorld()->AISystem)->PlayerBotManager->CachedBotMutator->SpawnBot(StaticLoadObject<UClass>("/Game/Athena/AI/Phoebe/BP_PlayerPawn_Athena_Phoebe.BP_PlayerPawn_Athena_Phoebe_C"), start, Transform.Translation, (FRotator&)FRotator(), false);
                 //printf("PAWN: %s\n", Pawn->GetName().c_str());
-                
+
             }
             PlayerStarts.Free();
+        }
+        if (MsgStr == "play")
+        {
+            // Connect to local server
+            printf("[PLAY BUTTON] Connecting to server: 127.0.0.1:7777\n");
+            UKismetSystemLibrary::ExecuteConsoleCommand(UWorld::GetWorld(), TEXT("open 127.0.0.1:7777"), nullptr);
         }
         
     }

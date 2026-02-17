@@ -16,6 +16,7 @@ namespace GameMode
     void HandleNewSafeZonePhase(AFortGameModeAthena* GameMode, int32 ZoneIndex);
     bool ReadyToStartMatch(AFortGameModeAthena* GameMode);
     void StartMatch(AGameModeBase* GameMode);
+    void SpawnBotsProgressively(AFortGameModeAthena* GameMode);
     APawn* SpawnDefaultPawnFor(AGameModeBase* GameModeBase, AController* NewPlayer, AActor* StartSpot);
     void InitializeForWorld(UNavigationSystemV1* NavSystem, UWorld* World, EFNavigationSystemRunMode Mode);
     void OnAircraftExitedDropZone(AFortGameModeAthena* GameMode, AFortAthenaAircraft* Aircraft);

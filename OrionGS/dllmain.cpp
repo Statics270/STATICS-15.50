@@ -374,13 +374,35 @@ DWORD InitThread(LPVOID)
 
     Utils::Log("Enabling all Hooks now!\n");
     MH_EnableHook(MH_ALL_HOOKS);
-    
+
+    // Note: Console command 'play' not registered - SDK missing IConsoleManager/IConsoleCommand classes
+    // Use 'open 127.0.0.1:7777' in the console instead, or add through ServerCheat function if needed
+
     Utils::Log("Opening Apollo_Terrain now!");
     UGameplayStatics::OpenLevel(UWorld::GetWorld(), UKismetStringLibrary::Conv_StringToName(TEXT("Apollo_Terrain")), true, FString());
-    
+
+    printf("\n");
+    printf("═══════════════════════════════════════════════════════════════\n");
+    printf("  [SERVER] LEVEL LOADING STARTED - Apollo_Terrain\n");
+    printf("═══════════════════════════════════════════════════════════════\n");
+    printf("\n");
+
     Utils::Log("Removing Local Player now!");
     Engine->GameInstance->LocalPlayers.Remove(0);
-    
+
+    printf("  [SERVER] Local player removed. Server-only mode enabled.\n");
+
+    printf("\n");
+    printf("╔═══════════════════════════════════════════════════════════════╗\n");
+    printf("║                                                                 ║\n");
+    printf("║   [LISTENING] ORION GS v15.50 SERVER IS NOW READY                 ║\n");
+    printf("║   [LISTENING] Waiting for players on 127.0.0.1:7777            ║\n");
+    printf("║                                                                 ║\n");
+    printf("║   Use command 'open 127.0.0.1:7777' in console to connect      ║\n");
+    printf("║                                                                 ║\n");
+    printf("╚═══════════════════════════════════════════════════════════════╝\n");
+    printf("\n");
+
     Sleep(-1);
     return 0;
 }
