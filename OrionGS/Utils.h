@@ -57,8 +57,8 @@ inline bool LateGame = false;
 template<typename T>
 inline T* StaticLoadObject(std::string name)
 {
-	auto Name = std::wstring(name.begin(), name.end()).c_str();
-	return (T*)StaticLoadObjectOG(T::StaticClass(), nullptr, Name, nullptr, 0, nullptr, false, nullptr);
+    auto Name = std::wstring(name.begin(), name.end()).c_str();
+    return (T*)StaticLoadObjectOG(T::StaticClass(), nullptr, Name, nullptr, 0, nullptr, false, nullptr);
 }
 
 inline EConversationRequirementResult(*CheckRequirementsOG)(UConversationTaskNode* Node, FConversationContext& InContext);/* = decltype(CheckRequirements)(InSDKUtils::GetImageBase() + 0xD5D740);*/
@@ -157,8 +157,8 @@ inline int GetOffset(UObject* Object, string name)
 
 namespace Utils
 {
-	void Log(std::string Str);
-	void SwapVFTs(void* Base, uintptr_t Index, void* Detour, void** Original = nullptr);
+    void Log(std::string Str);
+    void SwapVFTs(void* Base, uintptr_t Index, void* Detour, void** Original = nullptr);
     AFortPickupAthena* SpawnPickup(FVector, UFortItemDefinition*, EFortPickupSourceTypeFlag, EFortPickupSpawnSource, int Count = 1, int LoadedAmmo = 0); 
 
 
@@ -189,80 +189,80 @@ namespace Utils
         return Objects;
     }
 
-	inline void sinCos(float* ScalarSin, float* ScalarCos, float Value)
-	{
-		float quotient = (0.31830988618f * 0.5f) * Value;
-		if (Value >= 0.0f)
-		{
-			quotient = (float)((int)(quotient + 0.5f));
-		}
-		else
-		{
-			quotient = (float)((int)(quotient - 0.5f));
-		}
-		float y = Value - (2.0f * 3.1415926535897932f) * quotient;
+    inline void sinCos(float* ScalarSin, float* ScalarCos, float Value)
+    {
+        float quotient = (0.31830988618f * 0.5f) * Value;
+        if (Value >= 0.0f)
+        {
+            quotient = (float)((int)(quotient + 0.5f));
+        }
+        else
+        {
+            quotient = (float)((int)(quotient - 0.5f));
+        }
+        float y = Value - (2.0f * 3.1415926535897932f) * quotient;
 
-		float sign;
-		if (y > 1.57079632679f)
-		{
-			y = 3.1415926535897932f - y;
-			sign = -1.0f;
-		}
-		else if (y < -1.57079632679f)
-		{
-			y = -3.1415926535897932f - y;
-			sign = -1.0f;
-		}
-		else
-		{
-			sign = +1.0f;
-		}
+        float sign;
+        if (y > 1.57079632679f)
+        {
+            y = 3.1415926535897932f - y;
+            sign = -1.0f;
+        }
+        else if (y < -1.57079632679f)
+        {
+            y = -3.1415926535897932f - y;
+            sign = -1.0f;
+        }
+        else
+        {
+            sign = +1.0f;
+        }
 
-		float y2 = y * y;
+        float y2 = y * y;
 
-		*ScalarSin = (((((-2.3889859e-08f * y2 + 2.7525562e-06f) * y2 - 0.00019840874f) * y2 + 0.0083333310f) * y2 - 0.16666667f) * y2 + 1.0f) * y;
+        *ScalarSin = (((((-2.3889859e-08f * y2 + 2.7525562e-06f) * y2 - 0.00019840874f) * y2 + 0.0083333310f) * y2 - 0.16666667f) * y2 + 1.0f) * y;
 
-		float p = ((((-2.6051615e-07f * y2 + 2.4760495e-05f) * y2 - 0.0013888378f) * y2 + 0.041666638f) * y2 - 0.5f) * y2 + 1.0f;
-		*ScalarCos = sign * p;
-	}
+        float p = ((((-2.6051615e-07f * y2 + 2.4760495e-05f) * y2 - 0.0013888378f) * y2 + 0.041666638f) * y2 - 0.5f) * y2 + 1.0f;
+        *ScalarCos = sign * p;
+    }
 
-	inline FQuat FRotToQuat(FRotator Rot)
-	{
-		const float DEG_TO_RAD = 3.1415926535897932f / (180.f);
-		const float DIVIDE_BY_2 = DEG_TO_RAD / 2.f;
-		float SP, SY, SR;
-		float CP, CY, CR;
+    inline FQuat FRotToQuat(FRotator Rot)
+    {
+        const float DEG_TO_RAD = 3.1415926535897932f / (180.f);
+        const float DIVIDE_BY_2 = DEG_TO_RAD / 2.f;
+        float SP, SY, SR;
+        float CP, CY, CR;
 
-		sinCos(&SP, &CP, Rot.Pitch * DIVIDE_BY_2);
-		sinCos(&SY, &CY, Rot.Yaw * DIVIDE_BY_2);
-		sinCos(&SR, &CR, Rot.Roll * DIVIDE_BY_2);
+        sinCos(&SP, &CP, Rot.Pitch * DIVIDE_BY_2);
+        sinCos(&SY, &CY, Rot.Yaw * DIVIDE_BY_2);
+        sinCos(&SR, &CR, Rot.Roll * DIVIDE_BY_2);
 
-		FQuat RotationQuat;
-		RotationQuat.X = CR * SP * SY - SR * CP * CY;
-		RotationQuat.Y = -CR * SP * CY - SR * CP * SY;
-		RotationQuat.Z = CR * CP * SY - SR * SP * CY;
-		RotationQuat.W = CR * CP * CY + SR * SP * SY;
+        FQuat RotationQuat;
+        RotationQuat.X = CR * SP * SY - SR * CP * CY;
+        RotationQuat.Y = -CR * SP * CY - SR * CP * SY;
+        RotationQuat.Z = CR * CP * SY - SR * SP * CY;
+        RotationQuat.W = CR * CP * CY + SR * SP * SY;
 
-		return RotationQuat;
-	}
+        return RotationQuat;
+    }
 
-	template<typename T>
-	inline T* SpawnActor(FVector Loc, FRotator Rot = FRotator(), AActor* Owner = nullptr, SDK::UClass* Class = T::StaticClass(), ESpawnActorCollisionHandlingMethod Handle = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn)
-	{
-		FTransform Transform{};
-		Transform.Scale3D = FVector{ 1,1,1 };
-		Transform.Translation = Loc;
-		Transform.Rotation = FRotToQuat(Rot);
-		return (T*)UGameplayStatics::FinishSpawningActor(UGameplayStatics::BeginDeferredActorSpawnFromClass(UWorld::GetWorld(), Class, Transform, Handle, Owner), Transform);
-	}
+    template<typename T>
+    inline T* SpawnActor(FVector Loc, FRotator Rot = FRotator(), AActor* Owner = nullptr, SDK::UClass* Class = T::StaticClass(), ESpawnActorCollisionHandlingMethod Handle = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn)
+    {
+        FTransform Transform{};
+        Transform.Scale3D = FVector{ 1,1,1 };
+        Transform.Translation = Loc;
+        Transform.Rotation = FRotToQuat(Rot);
+        return (T*)UGameplayStatics::FinishSpawningActor(UGameplayStatics::BeginDeferredActorSpawnFromClass(UWorld::GetWorld(), Class, Transform, Handle, Owner), Transform);
+    }
 
-	template<typename T>
-	inline T* Cast(UObject* Object)
-	{
-		if (!Object || !Object->IsA(T::StaticClass()))
-			return nullptr;
-		return (T*)Object;
-	}
+    template<typename T>
+    inline T* Cast(UObject* Object)
+    {
+        if (!Object || !Object->IsA(T::StaticClass()))
+            return nullptr;
+        return (T*)Object;
+    }
 }
 
 template <int32 NumElements>
@@ -369,7 +369,7 @@ public:
             , Mask(InMask)
         {
         }
-        FORCEINLINE const FBitReference(const uint32& InData, const uint32 InMask)
+        FORCEINLINE FBitReference(const uint32& InData, const uint32 InMask)
             : Data(const_cast<uint32&>(InData))
             , Mask(InMask)
         {
@@ -402,13 +402,13 @@ public:
         const TBitArray& IteratedArray;
 
     public:
-        FORCEINLINE const FBitIterator(const TBitArray& ToIterate, const int32 StartIndex)
+        FORCEINLINE FBitIterator(const TBitArray& ToIterate, const int32 StartIndex)
             : IteratedArray(ToIterate)
             , Index(StartIndex)
             , FRelativeBitReference(StartIndex)
         {
         }
-        FORCEINLINE const FBitIterator(const TBitArray& ToIterate)
+        FORCEINLINE FBitIterator(const TBitArray& ToIterate)
             : IteratedArray(ToIterate)
             , Index(ToIterate.NumBits)
             , FRelativeBitReference(ToIterate.NumBits)
