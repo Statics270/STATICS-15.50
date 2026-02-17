@@ -726,18 +726,21 @@ void PlayerController::ServerLoadingScreenDropped(AFortPlayerController* PlayerC
         printf("[QUEST SYSTEM] ==================== QUEST VERIFICATION ====================\n");
         printf("[QUEST SYSTEM] Quest Manager initialized successfully!\n");
         printf("[QUEST SYSTEM] Current Quests: %d\n", QuestManager->CurrentQuests.Num());
+        int questIndex = 0;
         for (auto Quest : QuestManager->CurrentQuests) {
             auto QuestDef = Quest->GetQuestDefinitionBP();
             if (QuestDef) {
-                printf("[QUEST SYSTEM] Quest: %s\n", QuestDef->GetDisplayName().ToString().c_str());
+                printf("[QUEST SYSTEM] Quest %d: %s\n", questIndex, QuestDef->GetName().c_str());
                 printf("[QUEST SYSTEM]   Objectives: %d\n", Quest->Objectives.Num());
+                int objIndex = 0;
                 for (auto obj : Quest->Objectives) {
                     printf("[QUEST SYSTEM]     - Objective %d: %d/%d\n",
-                           (int)(obj - Quest->Objectives.Data),
+                           objIndex++,
                            obj->AchievedCount,
                            obj->RequiredCount);
                 }
             }
+            questIndex++;
         }
         printf("[QUEST SYSTEM] ==================== QUEST SYSTEM OK ====================\n");
     } else {

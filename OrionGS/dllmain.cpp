@@ -375,8 +375,8 @@ DWORD InitThread(LPVOID)
     Utils::Log("Enabling all Hooks now!\n");
     MH_EnableHook(MH_ALL_HOOKS);
 
-    // Note: Console command 'play' not registered - SDK missing IConsoleManager/IConsoleCommand classes
-    // Use 'open 127.0.0.1:7777' in the console instead, or add through ServerCheat function if needed
+    // Note: Console command 'play' is handled in ServerCheat function (PlayerController.cpp)
+    // Usage: Type 'play' in the console to connect to 127.0.0.1:7777
 
     Utils::Log("Opening Apollo_Terrain now!");
     UGameplayStatics::OpenLevel(UWorld::GetWorld(), UKismetStringLibrary::Conv_StringToName(TEXT("Apollo_Terrain")), true, FString());
