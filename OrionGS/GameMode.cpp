@@ -8,6 +8,11 @@
 #include <string>
 #include "Misc.h"
 
+// Variables globales pour le spawn progressif des bots
+static int BotsSpawned = 0;
+static float LastBotSpawnTime = 0.0f;
+static bool BotsSpawningComplete = false;
+
 
 void GameMode::HandleNewSafeZonePhase(AFortGameModeAthena* GameMode, int32 ZoneIndex)
 {
@@ -401,31 +406,63 @@ bool GameMode::ReadyToStartMatch(AFortGameModeAthena* GameMode)
             printf("WHAT SKUNKY SHIT IS THIS?!\n");
             exit(1);
         }
-        
+
         if (!bWarmupStarted) {
             bWarmupStarted = true;
-            
+
+            // Réinitialiser les variables de spawn des bots pour un nouveau match
+            static float LastResetTime = 0.0f;
+            float CurrentTime = UGameplayStatics::GetTimeSeconds(UWorld::GetWorld());
+            if (CurrentTime - LastResetTime > 5.0f) {
+                BotsSpawned = 0;
+                LastBotSpawnTime = CurrentTime;
+                BotsSpawningComplete = false;
+                LastResetTime = CurrentTime;
+                printf("[GAME MODE] Bot spawn variables reset for new match\n");
+            }
+
             #ifdef USING_EZAntiCheat
                 FEasyAntiCheatServer::Get()->BeginSession();
                 FEasyAntiCheatServer::Get()->SetGameSessionId(GameState->GameSessionId);
             #endif
 
-            float CurrentTime = UGameplayStatics::GetTimeSeconds(UWorld::GetWorld());
-            GameState->WarmupCountdownStartTime = CurrentTime;
-            GameState->WarmupCountdownEndTime = CurrentTime + 90.f;
-            
-            printf("Warmup countdown started! End time: %.2f\n", GameState->WarmupCountdownEndTime);
+            float CurrentTime2 = UGameplayStatics::GetTimeSeconds(UWorld::GetWorld());
+            GameState->WarmupCountdownStartTime = CurrentTime2;
+            GameState->WarmupCountdownEndTime = CurrentTime2 + 90.f;
+
+            printf("\n");
+            printf("┌─────────────────────────────────────────────────────────────────┐\n");
+            printf("│  [WARMUP] FIRST PLAYER JOINED - WARMUP STARTING              │\n");
+            printf("│  [WARMUP] Status: Waiting for players...                      │\n");
+            printf("│  [WARMUP] Message displayed to clients                       │\n");
+            printf("└─────────────────────────────────────────────────────────────────┘\n");
+            printf("\n");
+            printf("[WARMUP] Warmup countdown started! Duration: 90s, End time: %.2f\n", GameState->WarmupCountdownEndTime);
         }
 
         float CurrentTime = UGameplayStatics::GetTimeSeconds(UWorld::GetWorld());
+
+        // Spawn progressif des bots pendant le warmup
+        SpawnBotsProgressively(GameMode);
+
         if (CurrentTime >= GameState->WarmupCountdownEndTime && !bMatchStarted) {
             bMatchStarted = true;
-            printf("Warmup countdown finished! Starting match and launching aircraft...\n");
-            
+
+            printf("\n");
+            printf("┌─────────────────────────────────────────────────────────────────┐\n");
+            printf("│  [MATCH] WARMUP COMPLETE - MATCH STARTING                    │\n");
+            printf("│  [MATCH] BATTLE BUS LAUNCHING IN...                          │\n");
+            printf("│  [MATCH] Total players: %d (Real: %d, Bots: %d)            │\n",
+                   GameState->TotalPlayers,
+                   GameState->PlayerArray.Num() - BotsSpawned,
+                   BotsSpawned);
+            printf("└─────────────────────────────────────────────────────────────────┘\n");
+            printf("\n");
+
             StartMatch(GameMode);
-            
+
             UKismetSystemLibrary::ExecuteConsoleCommand(UWorld::GetWorld(), TEXT("startaircraft"), nullptr);
-            
+
             return true;
         }
 
@@ -433,6 +470,66 @@ bool GameMode::ReadyToStartMatch(AFortGameModeAthena* GameMode)
     }
 
     return false;
+}
+
+void GameMode::SpawnBotsProgressively(AFortGameModeAthena* GameMode) {
+    if (BotsSpawningComplete)
+        return;
+
+    auto GameState = Utils::Cast<AFortGameStateAthena>(GameMode->GameState);
+    if (!GameState || !GameState->CurrentPlaylistInfo.BasePlaylist)
+        return;
+
+    float CurrentTime = UGameplayStatics::GetTimeSeconds(UWorld::GetWorld());
+    int32 MaxPlayers = GameState->CurrentPlaylistInfo.BasePlaylist->MaxPlayers; // 100
+    int32 RealPlayers = GameState->PlayerArray.Num();
+    int32 BotsNeeded = MaxPlayers - RealPlayers;
+    int32 BotsPerSecond = 2; // Spawn 2 bots par seconde
+    float SpawnInterval = 1.0f / BotsPerSecond;
+
+    // Attendre que le warmup ait commencé
+    if (GameState->WarmupCountdownEndTime <= 0.0f)
+        return;
+
+    // Calculer combien de bots on peut spawn maintenant
+    if (CurrentTime - LastBotSpawnTime >= SpawnInterval && BotsSpawned < BotsNeeded) {
+        TArray<AActor*> PlayerStarts;
+        UGameplayStatics::GetAllActorsOfClass(UWorld::GetWorld(), AFortPlayerStartWarmup::StaticClass(), &PlayerStarts);
+
+        if (PlayerStarts.Num() > 0) {
+            int32 BotsToSpawnNow = std::min((int32)((CurrentTime - LastBotSpawnTime) / SpawnInterval),
+                                             BotsNeeded - BotsSpawned);
+
+            for (int32 i = 0; i < BotsToSpawnNow; i++) {
+                if (BotsSpawned >= BotsNeeded)
+                    break;
+
+                auto start = PlayerStarts.At(BotsSpawned % PlayerStarts.Num());
+                FTransform Transform{};
+                Transform.Translation = start->K2_GetActorLocation();
+                Transform.Rotation = FQuat();
+                Transform.Scale3D = FVector{1, 1, 1};
+
+                static auto PhoebeSpawnerData = StaticLoadObject<UClass>("/Game/Athena/AI/Phoebe/BP_AISpawnerData_Phoebe.BP_AISpawnerData_Phoebe_C");
+                ((UAthenaAISystem*)UWorld::GetWorld()->AISystem)->AISpawner->RequestSpawn(
+                    UFortAthenaAIBotSpawnerData::CreateComponentListFromClass(PhoebeSpawnerData, UWorld::GetWorld()),
+                    Transform
+                );
+
+                BotsSpawned++;
+                printf("[PROGRESSIVE SPAWN] Bot spawned: %d/%d (Real players: %d, Total needed: %d)\n",
+                       BotsSpawned, BotsNeeded, RealPlayers, MaxPlayers);
+            }
+
+            LastBotSpawnTime = CurrentTime;
+        }
+        PlayerStarts.Free();
+    }
+
+    if (BotsSpawned >= BotsNeeded) {
+        BotsSpawningComplete = true;
+        printf("[PROGRESSIVE SPAWN] ==================== All bots spawned! Total: %d ====================\n", BotsSpawned);
+    }
 }
 
 APawn* GameMode::SpawnDefaultPawnFor(AGameModeBase* GameModeBase, AController* NewPlayer, AActor* StartSpot)
