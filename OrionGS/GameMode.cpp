@@ -566,22 +566,25 @@ void GameMode::OnAircraftEnteredDropZone(AFortGameModeAthena* GameMode, AFortAth
 {
     auto GameState = ((AFortGameStateAthena*)UWorld::GetWorld()->GameState);
     static bool First = false;
+
     if (!First)
     {
         First = true;
         GameState->GamePhaseStep = EAthenaGamePhaseStep::BusFlying;
+
         for (auto Bot : GameMode->AliveBots)
         {
             FName Name1 = UKismetStringLibrary::Conv_StringToName(TEXT("AIEvaluator_Global_GamePhaseStep"));
             FName Name2 = UKismetStringLibrary::Conv_StringToName(TEXT("AIEvaluator_Global_GamePhase"));
+
             Bot->Blackboard->SetValueAsEnum(Name1, (uint8)GameState->GamePhaseStep);
             Bot->Blackboard->SetValueAsEnum(Name2, (uint8)EAthenaGamePhase::Aircraft);
 
             FName Name9 = UKismetStringLibrary::Conv_StringToName(TEXT("AIEvaluator_Global_IsInBus"));
-
             Bot->Blackboard->SetValueAsBool(Name9, true);
         }
     }
+
     OnAircraftEnteredDropZoneOG(GameMode, Aircraft);
 }
 
@@ -589,18 +592,22 @@ void GameMode::OnAircraftExitedDropZone(AFortGameModeAthena* GameMode, AFortAthe
 {
     auto GameState = ((AFortGameStateAthena*)UWorld::GetWorld()->GameState);
     static bool First = false;
+
     if (!First)
     {
         First = true;
         GameState->GamePhaseStep = EAthenaGamePhaseStep::StormHolding;
+
         for (auto Bot : GameMode->AliveBots)
         {
             FName Name1 = UKismetStringLibrary::Conv_StringToName(TEXT("AIEvaluator_Global_GamePhaseStep"));
             FName Name2 = UKismetStringLibrary::Conv_StringToName(TEXT("AIEvaluator_Global_GamePhase"));
+
             Bot->Blackboard->SetValueAsEnum(Name1, (uint8)GameState->GamePhaseStep);
             Bot->Blackboard->SetValueAsEnum(Name2, (uint8)EAthenaGamePhase::SafeZones);
         }
     }
+
     OnAircraftExitedDropZoneOG(GameMode, Aircraft);
 }
 
