@@ -1,2 +1,1 @@
-# STATICS-15.50
-Mod of ORION GS, 
+# Opium-GameServer
