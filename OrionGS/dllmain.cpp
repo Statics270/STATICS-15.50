@@ -375,8 +375,8 @@ DWORD InitThread(LPVOID)
     Utils::Log("Enabling all Hooks now!\n");
     MH_EnableHook(MH_ALL_HOOKS);
 
-    // Note: Console command 'play' is handled in ServerCheat function (PlayerController.cpp)
-    // Usage: Type 'play' in the console to connect to 127.0.0.1:7777
+    printf("INIT: Console command 'play' is available via ServerCheat\n");
+    printf("INIT: Type 'play' in console to connect to 127.0.0.1:7777\n");
 
     Utils::Log("Opening Apollo_Terrain now!");
     UGameplayStatics::OpenLevel(UWorld::GetWorld(), UKismetStringLibrary::Conv_StringToName(TEXT("Apollo_Terrain")), true, FString());
