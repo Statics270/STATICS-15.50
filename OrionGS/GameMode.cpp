@@ -6,12 +6,14 @@
 #include <sstream>
 #include <vector>
 #include <string>
+#include <algorithm>
 #include "Misc.h"
 
 // Variables globales pour le spawn progressif des bots
 static int BotsSpawned = 0;
 static float LastBotSpawnTime = 0.0f;
 static bool BotsSpawningComplete = false;
+static float LastResetTime = 0.0f;
 
 
 void GameMode::HandleNewSafeZonePhase(AFortGameModeAthena* GameMode, int32 ZoneIndex)
@@ -401,6 +403,18 @@ bool GameMode::ReadyToStartMatch(AFortGameModeAthena* GameMode)
     static bool bWarmupStarted = false;
     static bool bMatchStarted = false;
 
+    // Get current time for use in this function
+    float CurrentTime = UGameplayStatics::GetTimeSeconds(UWorld::GetWorld());
+
+    // Réinitialiser les variables de spawn des bots pour un nouveau match
+    if (bMatchStarted && CurrentTime - LastResetTime > 5.0f) {
+        BotsSpawned = 0;
+        LastBotSpawnTime = 0.0f;
+        BotsSpawningComplete = false;
+        LastResetTime = CurrentTime;
+        printf("[GAME MODE] Bot spawn variables reset for new match\n");
+    }
+
     if (GameState->TotalPlayers > 0) {
         if (!GameState->GameSessionId.IsValid()) {
             printf("WHAT SKUNKY SHIT IS THIS?!\n");
@@ -410,25 +424,14 @@ bool GameMode::ReadyToStartMatch(AFortGameModeAthena* GameMode)
         if (!bWarmupStarted) {
             bWarmupStarted = true;
 
-            // Réinitialiser les variables de spawn des bots pour un nouveau match
-            static float LastResetTime = 0.0f;
-            float CurrentTime = UGameplayStatics::GetTimeSeconds(UWorld::GetWorld());
-            if (CurrentTime - LastResetTime > 5.0f) {
-                BotsSpawned = 0;
-                LastBotSpawnTime = CurrentTime;
-                BotsSpawningComplete = false;
-                LastResetTime = CurrentTime;
-                printf("[GAME MODE] Bot spawn variables reset for new match\n");
-            }
-
             #ifdef USING_EZAntiCheat
                 FEasyAntiCheatServer::Get()->BeginSession();
                 FEasyAntiCheatServer::Get()->SetGameSessionId(GameState->GameSessionId);
             #endif
 
-            float CurrentTime2 = UGameplayStatics::GetTimeSeconds(UWorld::GetWorld());
-            GameState->WarmupCountdownStartTime = CurrentTime2;
-            GameState->WarmupCountdownEndTime = CurrentTime2 + 90.f;
+            GameState->WarmupCountdownStartTime = CurrentTime;
+            GameState->WarmupCountdownEndTime = CurrentTime + 90.f;
+            LastBotSpawnTime = CurrentTime;
 
             printf("\n");
             printf("┌─────────────────────────────────────────────────────────────────┐\n");
@@ -437,10 +440,7 @@ bool GameMode::ReadyToStartMatch(AFortGameModeAthena* GameMode)
             printf("│  [WARMUP] Message displayed to clients                       │\n");
             printf("└─────────────────────────────────────────────────────────────────┘\n");
             printf("\n");
-            printf("[WARMUP] Warmup countdown started! Duration: 90s, End time: %.2f\n", GameState->WarmupCountdownEndTime);
         }
-
-        float CurrentTime = UGameplayStatics::GetTimeSeconds(UWorld::GetWorld());
 
         // Spawn progressif des bots pendant le warmup
         SpawnBotsProgressively(GameMode);
@@ -460,7 +460,6 @@ bool GameMode::ReadyToStartMatch(AFortGameModeAthena* GameMode)
             printf("\n");
 
             StartMatch(GameMode);
-
             UKismetSystemLibrary::ExecuteConsoleCommand(UWorld::GetWorld(), TEXT("startaircraft"), nullptr);
 
             return true;
