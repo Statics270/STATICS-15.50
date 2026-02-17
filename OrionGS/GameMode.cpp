@@ -15,6 +15,10 @@ static float LastBotSpawnTime = 0.0f;
 static bool BotsSpawningComplete = false;
 static float LastResetTime = 0.0f;
 
+// Flag to track when player has dropped loading screen (fixes loading screen blocking issue)
+// Note: Not static so it can be accessed from PlayerController.cpp
+bool bPlayerHasDroppedLoadingScreen = false;
+
 
 void GameMode::HandleNewSafeZonePhase(AFortGameModeAthena* GameMode, int32 ZoneIndex)
 {
@@ -411,6 +415,7 @@ bool GameMode::ReadyToStartMatch(AFortGameModeAthena* GameMode)
         BotsSpawned = 0;
         LastBotSpawnTime = 0.0f;
         BotsSpawningComplete = false;
+        bPlayerHasDroppedLoadingScreen = false; // Reset flag for new match
         LastResetTime = CurrentTime;
         printf("[GAME MODE] Bot spawn variables reset for new match\n");
     }
@@ -443,6 +448,7 @@ bool GameMode::ReadyToStartMatch(AFortGameModeAthena* GameMode)
         }
 
         // Spawn progressif des bots pendant le warmup
+        // Will only actually spawn after player drops loading screen (flag check inside function)
         SpawnBotsProgressively(GameMode);
 
         if (CurrentTime >= GameState->WarmupCountdownEndTime && !bMatchStarted) {
@@ -485,6 +491,11 @@ void GameMode::SpawnBotsProgressively(AFortGameModeAthena* GameMode) {
     int32 BotsNeeded = MaxPlayers - RealPlayers;
     int32 BotsPerSecond = 2; // Spawn 2 bots par seconde
     float SpawnInterval = 1.0f / BotsPerSecond;
+
+    // Wait for player to be in-game (loading screen must be dropped)
+    if (!bPlayerHasDroppedLoadingScreen) {
+        return;
+    }
 
     // Attendre que le warmup ait commencé
     if (GameState->WarmupCountdownEndTime <= 0.0f)

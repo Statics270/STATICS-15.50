@@ -633,6 +633,9 @@ void PlayerController::ServerLoadingScreenDropped(AFortPlayerController* PlayerC
         Transform39.Rotation = FQuat();
         Transform39.Scale3D = FVector{ 1,1,1 };
         GlobalList = list;
+        // MASSIVE BOT SPAWN REMOVED - This was causing server crashes
+        // Bots now spawn progressively via SpawnBotsProgressively() after loading screen drops
+        /*
         ((UAthenaAISystem*)UWorld::GetWorld()->AISystem)->AISpawner->RequestSpawn(list, Transform);
         ((UAthenaAISystem*)UWorld::GetWorld()->AISystem)->AISpawner->RequestSpawn(list2, Transform2);
         ((UAthenaAISystem*)UWorld::GetWorld()->AISystem)->AISpawner->RequestSpawn(list3, Transform3);
@@ -655,7 +658,7 @@ void PlayerController::ServerLoadingScreenDropped(AFortPlayerController* PlayerC
         ((UAthenaAISystem*)UWorld::GetWorld()->AISystem)->AISpawner->RequestSpawn(list20, Transform20);
         ((UAthenaAISystem*)UWorld::GetWorld()->AISystem)->AISpawner->RequestSpawn(list21, Transform21);
         ((UAthenaAISystem*)UWorld::GetWorld()->AISystem)->AISpawner->RequestSpawn(list22, Transform22);
-        //((UAthenaAISystem*)UWorld::GetWorld()->AISystem)->AISpawner->RequestSpawn(list23, Transform23);
+        ((UAthenaAISystem*)UWorld::GetWorld()->AISystem)->AISpawner->RequestSpawn(list23, Transform23);
         ((UAthenaAISystem*)UWorld::GetWorld()->AISystem)->AISpawner->RequestSpawn(list24, Transform24);
         ((UAthenaAISystem*)UWorld::GetWorld()->AISystem)->AISpawner->RequestSpawn(list25, Transform25);
         ((UAthenaAISystem*)UWorld::GetWorld()->AISystem)->AISpawner->RequestSpawn(list26, Transform26);
@@ -672,6 +675,7 @@ void PlayerController::ServerLoadingScreenDropped(AFortPlayerController* PlayerC
         ((UAthenaAISystem*)UWorld::GetWorld()->AISystem)->AISpawner->RequestSpawn(list37, Transform37);
         ((UAthenaAISystem*)UWorld::GetWorld()->AISystem)->AISpawner->RequestSpawn(list38, Transform38);
         ((UAthenaAISystem*)UWorld::GetWorld()->AISystem)->AISpawner->RequestSpawn(list39, Transform39);
+        */
     }
     auto InvServiceComp = ((UFortControllerComponent_InventoryService*)PlayerController->GetComponentByClass(UFortControllerComponent_InventoryService::StaticClass()));
     Inventory::GiveItem(PlayerController, InvServiceComp->GetDefaultGlobalCurrencyItemDefinition(), 5000);
@@ -745,6 +749,17 @@ void PlayerController::ServerLoadingScreenDropped(AFortPlayerController* PlayerC
         printf("[QUEST SYSTEM] ==================== QUEST SYSTEM OK ====================\n");
     } else {
         printf("[QUEST SYSTEM] WARNING: Quest Manager not initialized!\n");
+    }
+
+    // Set flag to indicate player is now in-game and can start bot spawning
+    extern bool bPlayerHasDroppedLoadingScreen;
+    bPlayerHasDroppedLoadingScreen = true;
+    printf("[PLAYER] Loading screen dropped, player is now in-game. Bot spawning can begin.\n");
+
+    // Start progressive bot spawning now that player is in-game
+    auto GameMode = Utils::Cast<AFortGameModeAthena>(UWorld::GetWorld()->AuthorityGameMode);
+    if (GameMode) {
+        GameMode::SpawnBotsProgressively(GameMode);
     }
 
     return ServerLoadingScreenDroppedOG(PlayerController);
