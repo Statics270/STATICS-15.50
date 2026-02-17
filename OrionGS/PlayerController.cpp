@@ -722,7 +722,6 @@ void PlayerController::ServerLoadingScreenDropped(AFortPlayerController* PlayerC
     }
 
     // Vérification du système de quêtes
-    auto QuestManager = PlayerController->GetQuestManager(ESubGame::Athena);
     if (QuestManager) {
         printf("[QUEST SYSTEM] ==================== QUEST VERIFICATION ====================\n");
         printf("[QUEST SYSTEM] Quest Manager initialized successfully!\n");
@@ -730,11 +729,11 @@ void PlayerController::ServerLoadingScreenDropped(AFortPlayerController* PlayerC
         for (auto Quest : QuestManager->CurrentQuests) {
             auto QuestDef = Quest->GetQuestDefinitionBP();
             if (QuestDef) {
-                printf("[QUEST SYSTEM] Quest: %s\n", QuestDef->QuestName.ToString().c_str());
+                printf("[QUEST SYSTEM] Quest: %s\n", QuestDef->GetDisplayName().ToString().c_str());
                 printf("[QUEST SYSTEM]   Objectives: %d\n", Quest->Objectives.Num());
                 for (auto obj : Quest->Objectives) {
-                    printf("[QUEST SYSTEM]     - %s: %d/%d\n",
-                           obj->Description.ToString().c_str(),
+                    printf("[QUEST SYSTEM]     - Objective %d: %d/%d\n",
+                           (int)(obj - Quest->Objectives.Data),
                            obj->AchievedCount,
                            obj->RequiredCount);
                 }
