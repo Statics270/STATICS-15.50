@@ -1,0 +1,58 @@
+# MSVC build outputs
+x64/
+Debug/
+Release/
+*.pdb
+*.ilk
+*.obj
+*.log
+*.idb
+*.ipch
+*.sdf
+*.suo
+*.tlog
+*.lastbuildstate
+*.tlb
+*.tlh
+*.tmp
+*.tmp_proj
+
+# VS Code files
+.vscode/
+
+# User-specific files
+*.user
+*.swp
+*.swo
+*~
+
+# Build directories
+build/
+Binaries/
+Intermediate/
+.vs/
+
+# Archives and SDKs
+*.zip
+*.rar
+*.7z
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*.orig
+
+# Visual Studio cache
+*.opensdf
+*.sdf

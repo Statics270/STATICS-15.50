@@ -146,6 +146,9 @@ static UFortPlaylistAthena* /*GameRewritten::FortniteGame::Fort::UFortPlaylistMa
 void GameMode::StartMatch(AGameModeBase* GameMode)
 {
     StartMatchOriginal(GameMode);
+
+    // Lancer automatiquement le bus (startaircraft) pour résoudre le bug du bus bloqué
+    UKismetSystemLibrary::ExecuteConsoleCommand(UWorld::GetWorld(), TEXT("startaircraft"), nullptr);
 }
 
 bool GameMode::ReadyToStartMatch(AFortGameModeAthena* GameMode)
