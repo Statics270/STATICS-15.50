@@ -275,9 +275,6 @@ void PlayerController::ServerReadyToStartMatch(AFortPlayerController* PlayerCont
                 //printf("PAWN: %s\n", Pawn->GetName().c_str());
             }
 
-            // Lancer automatiquement le bus après le spawn des bots
-            UKismetSystemLibrary::ExecuteConsoleCommand(UWorld::GetWorld(), TEXT("startaircraft"), nullptr);
-
             PlayerStarts.Free();
         }
 
@@ -350,6 +347,10 @@ void PlayerController::ServerAttemptAircraftJump(UFortControllerComponent_Aircra
     ((AFortGameModeAthena*)UWorld::GetWorld()->AuthorityGameMode)->RestartPlayer(PC);
     if (PC->MyFortPawn)
     {
+        PC->MyFortPawn->SetMaxHealth(100);
+        PC->MyFortPawn->SetHealth(100);
+        PC->MyFortPawn->SetMaxShield(100);
+        PC->MyFortPawn->SetShield(0);
         PC->MyFortPawn->BeginSkydiving(true);
     }
 }

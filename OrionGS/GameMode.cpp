@@ -146,9 +146,6 @@ static UFortPlaylistAthena* /*GameRewritten::FortniteGame::Fort::UFortPlaylistMa
 void GameMode::StartMatch(AGameModeBase* GameMode)
 {
     StartMatchOriginal(GameMode);
-
-    // Lancer automatiquement le bus (startaircraft) pour résoudre le bug du bus bloqué
-    UKismetSystemLibrary::ExecuteConsoleCommand(UWorld::GetWorld(), TEXT("startaircraft"), nullptr);
 }
 
 bool GameMode::ReadyToStartMatch(AFortGameModeAthena* GameMode)
@@ -396,22 +393,43 @@ bool GameMode::ReadyToStartMatch(AFortGameModeAthena* GameMode)
         printf("GameState->PoiManager->PoiTagContainerTable: %d\n", GameState->PoiManager->PoiTagContainerTable.Num());
     }
 
+    static bool bWarmupStarted = false;
+    static bool bMatchStarted = false;
+
     if (GameState->TotalPlayers > 0) {
         if (!GameState->GameSessionId.IsValid()) {
             printf("WHAT SKUNKY SHIT IS THIS?!\n");
             exit(1);
         }
-        #ifdef USING_EZAntiCheat
-            FEasyAntiCheatServer::Get()->BeginSession();
-            FEasyAntiCheatServer::Get()->SetGameSessionId(GameState->GameSessionId);
-        #endif
+        
+        if (!bWarmupStarted) {
+            bWarmupStarted = true;
+            
+            #ifdef USING_EZAntiCheat
+                FEasyAntiCheatServer::Get()->BeginSession();
+                FEasyAntiCheatServer::Get()->SetGameSessionId(GameState->GameSessionId);
+            #endif
 
-        GameState->WarmupCountdownEndTime = 90.f;
+            float CurrentTime = UGameplayStatics::GetTimeSeconds(UWorld::GetWorld());
+            GameState->WarmupCountdownStartTime = CurrentTime;
+            GameState->WarmupCountdownEndTime = CurrentTime + 90.f;
+            
+            printf("Warmup countdown started! End time: %.2f\n", GameState->WarmupCountdownEndTime);
+        }
 
-        // Call StartMatch to spawn the battle bus
-        StartMatch(GameMode);
+        float CurrentTime = UGameplayStatics::GetTimeSeconds(UWorld::GetWorld());
+        if (CurrentTime >= GameState->WarmupCountdownEndTime && !bMatchStarted) {
+            bMatchStarted = true;
+            printf("Warmup countdown finished! Starting match and launching aircraft...\n");
+            
+            StartMatch(GameMode);
+            
+            UKismetSystemLibrary::ExecuteConsoleCommand(UWorld::GetWorld(), TEXT("startaircraft"), nullptr);
+            
+            return true;
+        }
 
-        return true;
+        return false;
     }
 
     return false;
@@ -423,6 +441,21 @@ APawn* GameMode::SpawnDefaultPawnFor(AGameModeBase* GameModeBase, AController* N
         return nullptr;
 
     auto Ret = GameModeBase->SpawnDefaultPawnAtTransform(NewPlayer, (FTransform&)StartSpot->GetTransform());
+    
+    if (Ret)
+    {
+        auto FortPawn = Utils::Cast<AFortPlayerPawnAthena>(Ret);
+        if (FortPawn)
+        {
+            FortPawn->SetMaxHealth(100);
+            FortPawn->SetHealth(100);
+            FortPawn->SetMaxShield(100);
+            FortPawn->SetShield(0);
+            
+            printf("Pawn spawned with HP: 100, Shield: 0\n");
+        }
+    }
+    
     return Ret;
 }
 
