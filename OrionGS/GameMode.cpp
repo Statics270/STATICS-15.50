@@ -570,7 +570,7 @@ void GameMode::OnAircraftEnteredDropZone(AFortGameModeAthena* GameMode, AFortAth
     if (!First)
     {
         First = true;
-        GameState->GamePhaseStep = EAthenaGamePhaseStep::BusFlying;
+        GameState->GamePhaseStep = (EAthenaGamePhaseStep)3; // BusFlying
 
         for (auto Bot : GameMode->AliveBots)
         {
@@ -596,7 +596,7 @@ void GameMode::OnAircraftExitedDropZone(AFortGameModeAthena* GameMode, AFortAthe
     if (!First)
     {
         First = true;
-        GameState->GamePhaseStep = EAthenaGamePhaseStep::StormHolding;
+        GameState->GamePhaseStep = (EAthenaGamePhaseStep)7; // StormHolding
 
         for (auto Bot : GameMode->AliveBots)
         {
